@@ -1,0 +1,16 @@
+{
+  "name": "Programmed Color-Coded Row Operation Simulator",
+  "short_name": "Row Ops",
+  "description": "Gauss-Jordan elimination practice with color-coded rows, an instant step checker and an automatic error log.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#13161b",
+  "theme_color": "#2a5bd7",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
