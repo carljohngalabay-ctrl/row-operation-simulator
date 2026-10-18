@@ -3,12 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2a5bd7">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>Row Operation Simulator (Annex 6)</title>
+<title>GaussColor</title>
 <style>
 :root{
   --bg:#f5f6f8;--card:#fff;--ink:#1b2230;--mute:#5a6475;--line:#d8dde6;--accent:#2a5bd7;--accent-ink:#fff;
@@ -111,7 +106,7 @@ table.log th,table.log td{border:1px solid var(--line);padding:6px;text-align:le
       <h1>GaussColor</h1>
       <p class="sub">Annex 6 · Gauss-Jordan elimination · you compute every new row, the simulator checks it, finds why it is wrong, solves it and explains.</p>
     </div>
-    <div class="row" style="margin:0"><button class="btn hide" id="installBtn">⤓ Install app</button><button class="btn primary" data-act="startTour">▶ Guided tutorial</button><label class="tog"><input type="checkbox" id="hintToggle" checked> Pivot Path hint on (teacher switch)</label></div>
+    <div class="row" style="margin:0"><button class="btn primary" data-act="startTour">▶ Guided tutorial</button><label class="tog"><input type="checkbox" id="hintToggle" checked> Pivot Path hint on (teacher switch)</label></div>
   </div>
 
   <div class="key" aria-label="Part 1 color key">
@@ -937,14 +932,6 @@ function endTour(){
   LOG.length=Math.min(LOG.length,TR.logStart); $('logCount').textContent=LOG.length?`(${LOG.length})`:'';
   goTab('solve'); $('fb').innerHTML=''; loadProblem(); window.scrollTo({top:0,behavior:'smooth'});
 }
-
-
-/* ============================== installable app (PWA) ============================== */
-let deferredInstall=null;
-window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredInstall=e; $('installBtn').classList.remove('hide'); });
-$('installBtn').addEventListener('click',async()=>{ if(!deferredInstall) return; deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall=null; $('installBtn').classList.add('hide'); });
-window.addEventListener('appinstalled',()=>$('installBtn').classList.add('hide'));
-if('serviceWorker' in navigator && location.protocol.startsWith('http')) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 
 /* ============================== boot ============================== */
 renderWork(); renderSpot(); loadProblem();
