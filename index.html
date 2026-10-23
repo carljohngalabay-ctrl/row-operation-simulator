@@ -104,7 +104,6 @@ table.log th,table.log td{border:1px solid var(--line);padding:6px;text-align:le
   <div class="top">
     <div>
       <h1>GaussColor</h1>
-      <p class="sub">Annex 6 · Gauss-Jordan elimination · you compute every new row, the simulator checks it, finds why it is wrong, solves it and explains.</p>
     </div>
     <div class="row" style="margin:0"><button class="btn primary" data-act="startTour">▶ Guided tutorial</button><label class="tog"><input type="checkbox" id="hintToggle" checked> Pivot Path hint on (teacher switch)</label></div>
   </div>
@@ -119,8 +118,8 @@ table.log th,table.log td{border:1px solid var(--line);padding:6px;text-align:le
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="false" data-tab="help">How to use</button>
     <button role="tab" aria-selected="true" data-tab="solve">Solve a system</button>
-    <button role="tab" aria-selected="false" data-tab="spot">Spot the error (Part 5)</button>
-    <button role="tab" aria-selected="false" data-tab="log">Error log (Part 7) <span id="logCount" class="small"></span></button>
+    <button role="tab" aria-selected="false" data-tab="spot">Spot the error</button>
+    <button role="tab" aria-selected="false" data-tab="log">Error log <span id="logCount" class="small"></span></button>
   </div>
 
   <!-- SOLVE TAB -->
@@ -134,7 +133,7 @@ table.log th,table.log td{border:1px solid var(--line);padding:6px;text-align:le
       <h2 style="margin-top:1rem">Try it: the Annex 6 worked example</h2>
       <p class="small">Solve x + 3y = 7 and 2x + 5y = 12. Follow the numbers below, then repeat each step with a deliberate mistake to see the explanation.</p>
       <ol class="how">
-        <li><b>Start.</b> Open the <i>Solve a system</i> tab, keep “Annex 6 worked example”, press <b>Start this problem</b>. (The button below does this for you.)</li>
+        <li><b>Start.</b> Open the <i>Solve a system</i> tab, keep “Sample problem”, press <b>Start this problem</b>. (The button below does this for you.)</li>
         <li><b>Step 0, Setup.</b> Type the augmented matrix: R1 = <code>1, 3, 7</code> and R2 = <code>2, 5, 12</code>, then <b>Check setup</b>. <i>Try a mistake:</i> write −5 instead of 5 and read the Setup (fact) explanation.</li>
         <li><b>Step 1.</b> Operation: <i>Add a multiple of a row</i>, target row <b>R2</b>, row used <b>R1</b>, multiplier <code>-2</code>. You will see <b>R2 → R2 − 2R1</b>. Type the After matrix: R2 = <code>0, -1, -2</code> (R1 is already filled in). Press <b>Check my step</b>. <i>Try a mistake:</i> write <code>2</code> for the last entry. The checker shows why, solves <code>12 − 2(7) = −2</code>, and names the failed prompt (Arithmetic and sign).</li>
         <li><b>Step 2.</b> Operation: <i>Multiply</i>, target <b>R2</b>, multiplier <code>-1</code>. R2 = <code>0, 1, 2</code>.</li>
@@ -502,7 +501,7 @@ function tipFor(types){
 
 /* ============================== state ============================== */
 const PRESETS=[
-  {name:'Annex 6 worked example (2 × 2)',eq:'x + 3y = 7\n2x + 5y = 12'},
+  {name:'Sample problem',eq:'x + 3y = 7\n2x + 5y = 12'},
   {name:'2 × 2 needing a swap',eq:'2y = 6\nx + y = 5'},
   {name:'3 × 3 system',eq:'x + y + z = 6\n2y + 5z = -4\n2x + 5y - z = 27'},
   {name:'3 × 3 with fractions',eq:'2x + 4y - 2z = 2\nx + 3y + z = 9\n3x + y + 2z = 7'}
@@ -648,6 +647,11 @@ function act2(name){
   if(name==='newprob'){ $('preset').scrollIntoView(); return; }
   if(name==='spotCheck') return spotCheck();
   if(name==='spotNext'){ SP.i=(SP.i+1)%SCEN.length; renderSpot(); return; }
+  if(name==='spotPractice'){ SP.mode='practice'; renderSpot(); return; }
+  if(name==='spotOwn'){ SP.mode='own'; renderSpot(); return; }
+  if(name==='spotBuild') return spotBuild();
+  if(name==='spotLock') return spotLock();
+  if(name==='spotNew'){ SP.mode='own'; SP.cust=null; SP.pending=null; SP.stage='form'; renderSpot(); return; }
 }
 const showFb=(html)=>{ $('fb').innerHTML=html; $('fb').scrollIntoView({behavior:'smooth',block:'nearest'}); };
 
@@ -777,18 +781,25 @@ function checkConcl(){
 
 /* ============================== SPOT THE ERROR (Part 5) ============================== */
 const SCEN=[
-  {title:'Part 5 example',eq:'x + 3y = 7\n2x + 5y = 12',op:{type:'add',t:1,s:0,k:new Q(-2)},entered:[[1,3,7],[0,-1,2]],hint:'Click the entry you think is wrong.'},
+  {title:'Example 1',eq:'x + 3y = 7\n2x + 5y = 12',op:{type:'add',t:1,s:0,k:new Q(-2)},entered:[[1,3,7],[0,-1,2]],hint:'Click the entry you think is wrong.'},
   {title:'Another student, same system',eq:'x + 3y = 7\n2x + 5y = 12',op:{type:'add',t:1,s:0,k:new Q(-2)},entered:[[1,3,7],[0,-1,12]],hint:'Click the entry you think is wrong.'},
   {title:'Copying check',eq:'x + 2y = 5\n3x + 4y = 11',op:{type:'add',t:1,s:0,k:new Q(-3)},entered:[[1,2,6],[0,-2,-4]],hint:'Click the entry you think is wrong.'},
   {title:'Which row was changed?',eq:'x + y = 4\n2x + 3y = 11',op:{type:'add',t:1,s:0,k:new Q(-2)},entered:[[-3,-5,-18],[2,3,11]],hint:'More than one entry is wrong. Click any one of them.'},
   {title:'Reciprocal slip',eq:'2x + 4y = 10\nx + 3y = 7',op:{type:'mul',t:0,k:new Q(1,2)},entered:[[-1,-2,-5],[1,3,7]],hint:'Click an entry that is wrong.'}
 ];
-const SP={i:0,sel:null};
+const SP={i:0,sel:null,mode:'practice',stage:'form',pending:null,cust:null,draft:{eq:'x + 3y = 7\n2x + 5y = 12',type:'add',t:'2',s:'1',k:'-2'}};
+const spCur=()=>(SP.mode==='own'&&SP.cust)?SP.cust:SCEN[SP.i];
 const toM=a=>a.map(r=>r.map(x=>x instanceof Q?x:new Q(x)));
+function spotToggle(){
+  return `<div class="row"><button class="btn ${SP.mode==='practice'?'primary':''}" data-act="spotPractice">Practice examples</button><button class="btn ${SP.mode==='own'?'primary':''}" data-act="spotOwn">Enter my own</button></div>`;
+}
+function spotMsg(t){ $('spotFb').innerHTML=`<div class="msg bad">${t}</div>`; }
 function renderSpot(){
-  const sc=SCEN[SP.i]; const sys=buildSystem(sc.eq); SP.sel=null; $('spotFb').innerHTML='';
-  const before=sys.aug, ent=toM(sc.entered);
-  $('spot').innerHTML=`<h2>Spot the error · ${sc.title} <span class="small">(${SP.i+1}/${SCEN.length})</span></h2>
+  SP.sel=null; $('spotFb').innerHTML='';
+  if(SP.mode==='own'&&!SP.cust){ return SP.stage==='grid'?renderSpotGrid():renderSpotForm(); }
+  const sc=spCur(); const sys=buildSystem(sc.eq);
+  const before=sys.aug, ent=toM(sc.entered), own=SP.mode==='own';
+  $('spot').innerHTML=`${spotToggle()}<h2>Spot the error · ${own?'Your own problem':sc.title+` <span class="small">(${SP.i+1}/${SCEN.length})</span>`}</h2>
     <div class="eq">${sys.lines.map(esc).join('<br>')}</div>
     <p>A student worked this system and wrote step 1: <b>${notation(sc.op)}</b></p>
     <div class="mats"><figure><figcaption>Before</figcaption>${matHTML(before,{vars:sys.vars})}</figure>
@@ -796,15 +807,65 @@ function renderSpot(){
     <p class="small">${sc.hint}</p>
     <div class="row"><label>What should it be? <input type="text" class="cell" id="spotVal" autocomplete="off"></label>
       <label>Which error type? <select id="spotType">${Object.entries(TYPES).map(([k,t])=>`<option value="${k}">${t.short} — ${t.label}</option>`).join('')}</select></label></div>
-    <div class="row"><button class="btn primary" data-act="spotCheck">Check my answers</button><button class="btn" data-act="spotNext">Next student work</button></div>`;
+    <div class="row"><button class="btn primary" data-act="spotCheck">Check my answers</button>${own?'<button class="btn" data-act="spotNew">Enter another problem</button>':'<button class="btn" data-act="spotNext">Next student work</button>'}</div>`;
+}
+function renderSpotForm(){
+  const d=SP.draft, opts=(n)=>[1,2,3,4].map(i=>`<option value="${i}"${String(i)===String(n)?' selected':''}>R${i}</option>`).join('');
+  $('spot').innerHTML=`${spotToggle()}<h2>Spot the error · enter your own</h2>
+    <p class="small">Step 1: type a system (2 to 4 equations, one per line) and the row operation the student used.</p>
+    <textarea id="spEq" rows="4" style="width:100%">${esc(d.eq)}</textarea>
+    <div class="row">
+      <label>Operation <select id="spType"><option value="add"${d.type==='add'?' selected':''}>Add a multiple of one row to another</option><option value="mul"${d.type==='mul'?' selected':''}>Multiply a row</option><option value="swap"${d.type==='swap'?' selected':''}>Swap two rows</option></select></label>
+      <label>Row to change <select id="spT">${opts(d.t)}</select></label>
+      <label>Other row (add / swap) <select id="spS">${opts(d.s)}</select></label>
+      <label>Multiplier <input type="text" class="cell" id="spK" value="${esc(d.k)}" autocomplete="off"></label>
+    </div>
+    <p class="small">Multiplier examples: -2, 3, 1/2. Leave it as is for a swap.</p>
+    <div class="row"><button class="btn primary" data-act="spotBuild">Next: type the student's answer</button></div>`;
+}
+function renderSpotGrid(){
+  const {eq,op,sys}=SP.pending, after=applyOp(sys.aug,op);
+  const head='<thead><tr><th></th>'+sys.vars.map(v=>`<th>${esc(v)}</th>`).join('')+'<th class="aug">const.</th></tr></thead>';
+  const body=after.map((r,i)=>`<tr style="--rc:var(--c${i+1})"><th scope="row">${rl(i)}</th>`+r.map((x,j)=>`<td class="${j===r.length-1?'aug':''}"><input type="text" class="cell" data-sr="${i}" data-sc="${j}" value="${esc(String(x))}" autocomplete="off"></td>`).join('')+'</tr>').join('');
+  $('spot').innerHTML=`${spotToggle()}<h2>Spot the error · enter your own</h2>
+    <div class="eq">${sys.lines.map(esc).join('<br>')}</div>
+    <p>Step: <b>${notation(op)}</b></p>
+    <div class="mats"><figure><figcaption>Before</figcaption>${matHTML(sys.aug,{vars:sys.vars})}</figure>
+    <figure><figcaption>Step 2: type the student's answer (change at least one entry to make a mistake)</figcaption><table class="mat grid">${head}<tbody>${body}</tbody></table></figure></div>
+    <div class="row"><button class="btn primary" data-act="spotLock">Use this answer</button><button class="btn" data-act="spotNew">Back</button></div>`;
+}
+function spotBuild(){
+  const eq=$('spEq').value, type=$('spType').value, t=+$('spT').value-1, s2=+$('spS').value-1, kRaw=$('spK').value;
+  SP.draft={eq,type,t:String(t+1),s:String(s2+1),k:kRaw};
+  const sys=buildSystem(eq); if(sys.error){ spotMsg(esc(sys.error)); return; }
+  const n=sys.aug.length; if(t>=n||s2>=n){ spotMsg(`This system has only ${n} rows. Choose rows R1 to R${n}.`); return; }
+  const kq=parseQ(kRaw); let op;
+  if(type==='swap') op={type:'swap',a:t,b:s2};
+  else{
+    if(!kq){ spotMsg('I could not read the multiplier. Examples: -2, 3, 1/2.'); return; }
+    op=type==='mul'?{type:'mul',t,k:kq}:{type:'add',t,s:s2,k:kq};
+  }
+  const err=opError(op); if(err){ spotMsg(esc(err)); return; }
+  SP.pending={eq,op,sys}; SP.stage='grid'; renderSpot();
+}
+function spotLock(){
+  const {eq,op,sys}=SP.pending, n=sys.aug.length, m=n+1, ent=[];
+  for(let i=0;i<n;i++){ ent.push([]); for(let j=0;j<m;j++){
+    const el=document.querySelector(`#spot input[data-sr="${i}"][data-sc="${j}"]`), q=parseQ(el.value);
+    if(!q){ el.classList.add('invalid'); spotMsg('Every entry must be a number or fraction, like 3, -2 or 1/2.'); return; }
+    ent[i].push(q);
+  }}
+  const res=diagnose(sys.aug,op,ent,sys.vars);
+  if(res.wrong.size===0){ spotMsg('That answer is correct, so there is nothing to spot. Change at least one entry to make a mistake.'); return; }
+  SP.cust={eq,op,entered:ent,hint:'Click the entry you think is wrong.'}; renderSpot();
 }
 function spotPick(key){
   if(!$('spotMat')||$('tab-spot').classList.contains('hide')) return;
-  SP.sel=key; const sc=SCEN[SP.i]; const sys=buildSystem(sc.eq);
+  SP.sel=key; const sc=spCur(); const sys=buildSystem(sc.eq);
   $('spotMat').innerHTML=matHTML(toM(sc.entered),{vars:sys.vars,changed:changedRows(sc.op),pick:true,sel:key});
 }
 function spotCheck(){
-  const sc=SCEN[SP.i], sys=buildSystem(sc.eq), ent=toM(sc.entered);
+  const sc=spCur(), sys=buildSystem(sc.eq), ent=toM(sc.entered);
   if(!SP.sel){ $('spotFb').innerHTML='<div class="msg note">First click the entry you think is wrong.</div>'; return; }
   const res=diagnose(sys.aug,sc.op,ent,sys.vars);
   const [r,c]=SP.sel.split(',').map(Number);
