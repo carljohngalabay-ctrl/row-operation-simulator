@@ -22,16 +22,78 @@ jobs:
 
       - name: Copy web files into www/
         run: |
-          mkdir www
+          mkdir -p www/icons
           cp index.html manifest.webmanifest sw.js www/
-          cp -r icons www/
+          cp -r icons/. www/icons/ || true
+
+      - name: Draw the GaussColor logo, app icon and splash
+        run: |
+          pip install pillow --break-system-packages || true
+          cat > make_logo.py <<'PY'
+          import math, os, sys
+          from PIL import Image, ImageDraw
+
+          RED=(224,36,52); BLUE=(30,155,240); GREEN=(20,147,90); ORANGE=(245,158,11); BG=(240,245,252)
+          SS=4
+
+          def regular(cx,cy,R,n,rot):
+              return [(cx+R*math.cos(math.radians(rot+360*i/n)), cy+R*math.sin(math.radians(rot+360*i/n))) for i in range(n)]
+
+          def rounded_poly(d,cx,cy,pts,inr,r,fill):
+              k=(inr-r)/inr
+              sp=[(cx+(x-cx)*k, cy+(y-cy)*k) for x,y in pts]
+              d.polygon(sp,fill=fill)
+              d.line(sp+[sp[0],sp[1]],fill=fill,width=int(2*r),joint="curve")
+              for x,y in sp: d.ellipse([x-r,y-r,x+r,y+r],fill=fill)
+
+          def logo(size,T,gap,bg=None):
+              W=size*SS
+              img=Image.new("RGBA",(W,W),(0,0,0,0) if bg is None else bg+(255,))
+              d=ImageDraw.Draw(img)
+              t=T*SS*size/1024; g=gap*SS*size/1024
+              o=(t+g)/2; c=W/2
+              # red circle (top-left)
+              x,y=c-o,c-o; d.ellipse([x-t/2,y-t/2,x+t/2,y+t/2],fill=RED)
+              # blue rounded square (top-right)
+              x,y=c+o,c-o; s=t*0.9; d.rounded_rectangle([x-s/2,y-s/2,x+s/2,y+s/2],radius=t*0.16,fill=BLUE)
+              # green triangle (bottom-left)
+              x,y=c-o,c+o; R=t*0.58; cy=y+R/4
+              rounded_poly(d,x,cy,regular(x,cy,R,3,-90),R/2,t*0.07,GREEN)
+              # orange diamond (bottom-right)
+              x,y=c+o,c+o; R=t*0.54
+              rounded_poly(d,x,y,regular(x,y,R,4,-90),R/math.sqrt(2),t*0.07,ORANGE)
+              return img.resize((size,size),Image.LANCZOS)
+
+          def solid(size,color):
+              return Image.new("RGBA",(size,size),color+(255,))
+
+          if __name__=="__main__":
+              out=sys.argv[1] if len(sys.argv)>1 else "out"
+              os.makedirs(out,exist_ok=True)
+              logo(1024,320,60,BG).convert("RGB").save(f"{out}/icon-only.png")
+              logo(1024,200,40,None).save(f"{out}/icon-foreground.png")
+              solid(1024,BG).convert("RGB").save(f"{out}/icon-background.png")
+              logo(512,320,60,BG).convert("RGB").save(f"{out}/icon-512.png")
+              logo(192,320,60,BG).convert("RGB").save(f"{out}/icon-192.png")
+              logo(160,330,56,None).save(f"{out}/logo-transparent.png")
+              sp=Image.new("RGB",(2732,2732),BG)
+              lg=logo(1024,200,40,None).resize((1200,1200),Image.LANCZOS)
+              sp.paste(lg,((2732-1200)//2,(2732-1200)//2),lg)
+              sp.save(f"{out}/splash.png")
+          PY
+          python3 make_logo.py out
+          mkdir -p assets
+          cp out/icon-only.png out/icon-foreground.png out/icon-background.png out/splash.png assets/
+          cp out/icon-192.png out/icon-512.png www/icons/
 
       - name: Create Capacitor Android project
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install -D @capacitor/assets
           npx cap init "GaussColor" com.rowopsim.app --web-dir www
           npx cap add android
+          npx capacitor-assets generate --android
           npx cap sync android
 
       - name: Build debug APK
