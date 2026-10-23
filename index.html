@@ -649,6 +649,7 @@ function act2(name){
   if(name==='spotNext'){ SP.i=(SP.i+1)%SCEN.length; renderSpot(); return; }
   if(name==='spotPractice'){ SP.mode='practice'; renderSpot(); return; }
   if(name==='spotOwn'){ SP.mode='own'; renderSpot(); return; }
+  if(name==='spotRemake'){ renderSpot(); return; }
   if(name==='spotBuild') return spotBuild();
   if(name==='spotLock') return spotLock();
   if(name==='spotNew'){ SP.mode='own'; SP.cust=null; SP.pending=null; SP.stage='form'; renderSpot(); return; }
@@ -825,14 +826,16 @@ function renderSpotForm(){
 }
 function renderSpotGrid(){
   const {eq,op,sys}=SP.pending, after=applyOp(sys.aug,op);
+  const cr=changedRows(op), ri=cr[Math.floor(Math.random()*cr.length)], cj=Math.floor(Math.random()*sys.aug[0].length), was=after[ri][cj];
+  after[ri][cj]=(Math.random()<.5&&!was.isZero())?was.neg():was.add(ONE);
   const head='<thead><tr><th></th>'+sys.vars.map(v=>`<th>${esc(v)}</th>`).join('')+'<th class="aug">const.</th></tr></thead>';
   const body=after.map((r,i)=>`<tr style="--rc:var(--c${i+1})"><th scope="row">${rl(i)}</th>`+r.map((x,j)=>`<td class="${j===r.length-1?'aug':''}"><input type="text" class="cell" data-sr="${i}" data-sc="${j}" value="${esc(String(x))}" autocomplete="off"></td>`).join('')+'</tr>').join('');
   $('spot').innerHTML=`${spotToggle()}<h2>Spot the error · enter your own</h2>
     <div class="eq">${sys.lines.map(esc).join('<br>')}</div>
     <p>Step: <b>${notation(op)}</b></p>
     <div class="mats"><figure><figcaption>Before</figcaption>${matHTML(sys.aug,{vars:sys.vars})}</figure>
-    <figure><figcaption>Step 2: type the student's answer (change at least one entry to make a mistake)</figcaption><table class="mat grid">${head}<tbody>${body}</tbody></table></figure></div>
-    <div class="row"><button class="btn primary" data-act="spotLock">Use this answer</button><button class="btn" data-act="spotNew">Back</button></div>`;
+    <figure><figcaption>Step 2: the student's answer. A mistake was added automatically; edit any entry if you want your own</figcaption><table class="mat grid">${head}<tbody>${body}</tbody></table></figure></div>
+    <div class="row"><button class="btn primary" data-act="spotLock">Use this answer</button><button class="btn" data-act="spotRemake">Different mistake</button><button class="btn" data-act="spotNew">Back</button></div>`;
 }
 function spotBuild(){
   const eq=$('spEq').value, type=$('spType').value, t=+$('spT').value-1, s2=+$('spS').value-1, kRaw=$('spK').value;
